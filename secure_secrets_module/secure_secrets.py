@@ -39,18 +39,33 @@ class secrets:
             self.secrets = f.read()
         self.secrets = AES_GCM.decrypt(self.secrets,self.secure_module_key).decode('utf-8')
         self.secrets: dict = json.loads(self.secrets)
-        self.aeskey = self.secrets['Key_AES']
+        self.aeskey = self.secrets['Key_AES']['data']
         self.aeskey = base64.b64decode(self.aeskey)
         
     def add_secret(self, id: str, data) -> None:
-        self.secrets.update({id: data})
+        
+        #handling of binary data
+        if type(data)==type(b'12'):
+            binary = True
+            data = base64.b64encode(data).decode('ascii')
+        else:
+            binary = False
+            
+        self.secrets.update({id: {'data': data,'binary': binary, 'private': False}})
         secr = json.dumps(self.secrets).encode('utf-8')
         secr = AES_GCM.encrypt(secr, self.secure_module_key)
         with open(backendpath('data.secrets'),'wb') as f:
             f.write(secr)
     
     def get_secret(self, id: str):
-        return self.secrets[id]
+        secret = self.secrets[id]
+        data = secret['data']
+        
+        #handling of binary data
+        if secret['binary']:
+            data = base64.b64decode(data)
+            
+        return data
     
     def password_change(self) -> None:
         import getpass
@@ -101,7 +116,7 @@ class secrets:
         #adds the module secrets
         self.secrets = {}
         self.add_secret('Version','v1.0.0')
-        self.add_secret('Key_AES',base64.b64encode(AES_GCM.random_key()).decode('ascii'))
+        self.add_secret('Key_AES',AES_GCM.random_key())
     
     def AES_Encr(self,data) -> bytes:
         """Encrypts stuff, without having to worry about the key or data type
