@@ -30,6 +30,20 @@
                 "showReuseMessage": true,
                 "clear": true
             }
+        },
+        {
+            "label": "Publish to testPyPI",
+            "type": "shell",
+            "command": ".//.vscode//publish_to_testpypi.cmd",
+            "group": "none",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "new",
+                "showReuseMessage": false,
+                "clear": true
+            }
         }
     ]
 }
