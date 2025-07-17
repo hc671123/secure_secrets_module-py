@@ -41,8 +41,15 @@ class secrets:
         self.secrets: dict = json.loads(self.secrets)
         self.aeskey = self.secrets['Key_AES']['data']
         self.aeskey = base64.b64decode(self.aeskey)
-        
-    def add_secret(self, id: str, data) -> None:
+    
+    def add_secret(self,id: str, data) -> None:
+        self.__check_permission(id)
+        self.__add_secret_background(id, data)
+    
+    def __add_secret_module(self, id: str, data) -> None:
+        self.__add_secret_background(id, data, private=True)
+    
+    def __add_secret_background(self, id: str, data, private = False) -> None:
         
         #handling of binary data
         if type(data)==type(b'12'):
@@ -51,9 +58,10 @@ class secrets:
         else:
             binary = False
             
-        self.secrets.update({id: {'data': data,'binary': binary, 'private': False}})
+        self.secrets.update({id: {'data': data,'binary': binary, 'private': private}})
         secr = json.dumps(self.secrets).encode('utf-8')
         secr = AES_GCM.encrypt(secr, self.secure_module_key)
+        
         with open(backendpath('data.secrets'),'wb') as f:
             f.write(secr)
     
@@ -61,11 +69,18 @@ class secrets:
         secret = self.secrets[id]
         data = secret['data']
         
+        self.__check_permission(id)            
+        
         #handling of binary data
         if secret['binary']:
             data = base64.b64decode(data)
             
         return data
+    
+    def __check_permission(self, id: str) -> None:
+        if id in self.secrets.keys():
+            if self.secrets[id]['private']:
+                raise PermissionError('You do not have Permission to access module secrets!')
     
     def password_change(self) -> None:
         import getpass
@@ -115,8 +130,7 @@ class secrets:
             
         #adds the module secrets
         self.secrets = {}
-        self.add_secret('Version','v1.0.0')
-        self.add_secret('Key_AES',AES_GCM.random_key())
+        self.__add_secret_module('Key_AES',AES_GCM.random_key())
     
     def AES_Encr(self,data) -> bytes:
         """Encrypts stuff, without having to worry about the key or data type
