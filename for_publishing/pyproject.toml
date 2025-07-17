@@ -1,0 +1,30 @@
+# pyproject.toml
+
+[build-system]
+requires      = ["setuptools>=80.9.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hc671123_secure_secrets"
+version = "2.1.0"
+description = "Module which enables storing encrypted, password protected secrets in a single file. Also allows for easy encryption and decryption of data"
+readme = "README.md"
+authors = [{ name = "hc671123", email = "behoben_floral0p@icloud.com" }]
+maintainers = [{ name = "hc671123", email = "behoben_floral0p@icloud.com"}]
+license = "MIT"
+classifiers = [
+    "Intended Audience :: Developers",
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.13",
+]
+keywords = ["secrets", "secure", "encryption"]
+dependencies = [
+    "pycryptodomex >= 3.23.0",
+]
+requires-python = ">=3.13"
+
+[project.urls]
+Homepage = "https://github.com/hc671123/secure_secrets_module-py"
+Repository = "https://github.com/hc671123/secure_secrets_module-py.git"
+Issues = "https://github.com/hc671123/secure_secrets_module-py/issues"
