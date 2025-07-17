@@ -1,5 +1,5 @@
 from secure_secrets_module import *
-secmod = secrets()
+secmod = secrets('./')
 secmod.add_secret('example','Hello World')
 print(secmod.get_secret('example'))
 secmod.add_secret('example2',['Hello','World',2])

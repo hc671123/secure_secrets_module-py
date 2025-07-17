@@ -8,34 +8,42 @@ class secrets:
     Information is stored encrypted and password protected. 
     The module also provides the WebEncr and WebDecr functions which encrypts and decrypts any object with AES-GCM 256-bit encryption.
     """
-    def __init__(self, password: str = None):
+    def __init__(self, directory: str, password: str = None):
+        """class which stores, initiates and handels secrets
+
+        Args:
+            directory (str): _Path to the directory in which the secrets and other needed files will be stored_
+            password (str, optional): _the password for the secrets, if None a prompt to the user is made_. Defaults to None.
+        """
         #change this variable for faster hashing (lower the number) or more secure hashing (raise the number). A value below 1000000 is highly discouraged.
         self.iterations_pbkdf_hashing = 10_000_000
         
         import getpass
         from os import path
         
+        self.directory = directory
+        
         if password == None:
             password = getpass.getpass('Type in your encryption password -->')
             
-        if not path.exists(backendpath('data.secrets')):
+        if not path.exists(backendpath(self.directory,'data.secrets')):
             print('initializing secure_module')
             self.__init_secure_module(password)
         
-        with open(backendpath('s.bin'),'rb') as f:
+        with open(backendpath(self.directory,'s.bin'),'rb') as f:
             salt = f.read(128) 
         
         from hashlib import pbkdf2_hmac
         password_key = pbkdf2_hmac('sha-256',password.encode('utf-8'), salt, self.iterations_pbkdf_hashing)
         
-        with open(backendpath('k.bin'),'rb') as f:
+        with open(backendpath(self.directory,'k.bin'),'rb') as f:
             secure_module_key_encrypted = f.read()
             
         self.secure_module_key = AES_GCM.decrypt(secure_module_key_encrypted,password_key)        
         self.__load_secrets()
     
     def __load_secrets(self) -> None:
-        with open(backendpath('data.secrets'),'rb') as f:
+        with open(backendpath(self.directory,'data.secrets'),'rb') as f:
             self.secrets = f.read()
         self.secrets = AES_GCM.decrypt(self.secrets,self.secure_module_key).decode('utf-8')
         self.secrets: dict = json.loads(self.secrets)
@@ -62,7 +70,7 @@ class secrets:
         secr = json.dumps(self.secrets).encode('utf-8')
         secr = AES_GCM.encrypt(secr, self.secure_module_key)
         
-        with open(backendpath('data.secrets'),'wb') as f:
+        with open(backendpath(self.directory,'data.secrets'),'wb') as f:
             f.write(secr)
     
     def get_secret(self, id: str):
@@ -86,11 +94,11 @@ class secrets:
         import getpass
         #Checking if old password is valid
         password = getpass.getpass('enter your current password -->')
-        with open(backendpath('s.bin'),'rb') as f:
+        with open(backendpath(self.directory,'s.bin'),'rb') as f:
             salt = f.read(128) 
         from hashlib import pbkdf2_hmac
         password_key = pbkdf2_hmac('sha-256',password.encode('utf-8'), salt, self.iterations_pbkdf_hashing)
-        with open(backendpath('k.bin'),'rb') as f:
+        with open(backendpath(self.directory,'k.bin'),'rb') as f:
             secure_module_key_encrypted = f.read()
         self.secure_module_key = AES_GCM.decrypt(secure_module_key_encrypted,password_key) 
         
@@ -98,14 +106,14 @@ class secrets:
         password = getpass.getpass('enter the new encryption password -->')
         from os import urandom
         salt = urandom(128)
-        with open(backendpath('s.bin'),'wb') as f:
+        with open(backendpath(self.directory,'s.bin'),'wb') as f:
             f.write(salt)
         
         from hashlib import pbkdf2_hmac
         password_key = pbkdf2_hmac('sha-256',password.encode('utf-8'), salt, self.iterations_pbkdf_hashing)
         
         secure_module_key_encrypted = AES_GCM.encrypt(self.secure_module_key,password_key)
-        with open(backendpath('k.bin'),'wb') as f:
+        with open(backendpath(self.directory,'k.bin'),'wb') as f:
             f.write(secure_module_key_encrypted)
         print('Changed password!')
         
@@ -116,7 +124,7 @@ class secrets:
         from os import urandom
         salt = urandom(128)
         
-        with open(backendpath('s.bin'),'wb') as f:
+        with open(backendpath(self.directory,'s.bin'),'wb') as f:
             f.write(salt)
         
         from hashlib import pbkdf2_hmac
@@ -125,7 +133,7 @@ class secrets:
         secure_module_key = AES_GCM.random_key()
         self.secure_module_key = pbkdf2_hmac('sha-256',secure_module_key, urandom(256), 40_000_000)
         secure_module_key_encrypted = AES_GCM.encrypt(self.secure_module_key,password_key)
-        with open(backendpath('k.bin'),'wb') as f:
+        with open(backendpath(self.directory,'k.bin'),'wb') as f:
             f.write(secure_module_key_encrypted)
             
         #adds the module secrets

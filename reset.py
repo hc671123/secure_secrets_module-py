@@ -2,6 +2,6 @@
 from shutil import rmtree
 rmtree('./secure_secrets_module/__pycache__')
 from os import remove
-remove('./secure_secrets_module/k.bin')
-remove('./secure_secrets_module/s.bin')
-remove('./secure_secrets_module/data.secrets')
+remove('./k.bin')
+remove('./s.bin')
+remove('./data.secrets')
