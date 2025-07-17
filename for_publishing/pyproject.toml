@@ -13,7 +13,6 @@ authors = [{ name = "hc671123", email = "behoben_floral0p@icloud.com" }]
 maintainers = [{ name = "hc671123", email = "behoben_floral0p@icloud.com"}]
 license = "MIT"
 classifiers = [
-    "License :: OSI Approved :: MIT License",
     "Intended Audience :: Developers",
     "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python",
