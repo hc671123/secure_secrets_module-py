@@ -17,6 +17,7 @@ class secrets:
         """
         #change this variable for faster hashing (lower the number) or more secure hashing (raise the number). A value below 1000000 is highly discouraged.
         self.iterations_pbkdf_hashing = 10_000_000
+        self.secrets_file_version = '1.0.0'
         
         import getpass
         from os import path
@@ -45,8 +46,16 @@ class secrets:
     def __load_secrets(self) -> None:
         with open(backendpath(self.directory,'data.secrets'),'rb') as f:
             self.secrets = f.read()
+            
         self.secrets = AES_GCM.decrypt(self.secrets,self.secure_module_key).decode('utf-8')
         self.secrets: dict = json.loads(self.secrets)
+        
+        if not 'secrets_file_version' in self.secrets.keys():
+            self.__add_secret_module('secrets_file_version','1.0.0')
+            
+        if not self.secrets_file_version == self.secrets['secrets_file_version']['data']:
+            raise NotImplementedError(f'The version ({self.secrets['secrets_file_version']['data']}) of the given secrets file ({backendpath(self.directory,'data.secrets')}) is not compatible with this Version of the module!')
+        
         self.aeskey = self.secrets['Key_AES']['data']
         self.aeskey = base64.b64decode(self.aeskey)
     
@@ -139,6 +148,7 @@ class secrets:
         #adds the module secrets
         self.secrets = {}
         self.__add_secret_module('Key_AES',AES_GCM.random_key())
+        self.__add_secret_module('secrets_file_version',self.secrets_file_version)
     
     def AES_Encr(self,data) -> bytes:
         """Encrypts stuff, without having to worry about the key or data type

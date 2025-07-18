@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hc671123_secure_secrets"
-dynamic = ["version"]
+version = '2.3.0'
 description = "Module which enables storing encrypted, password protected secrets in a single file. Also allows for easy encryption and decryption of data"
 readme = "README.md"
 authors = [{ name = "hc671123", email = "behoben_floral0p@icloud.com" }]
