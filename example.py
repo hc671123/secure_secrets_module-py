@@ -1,3 +1,4 @@
+#code which shows examples of how to use the module
 from secure_secrets_module import *
 secmod = secrets('./')
 secmod.add_secret('example','Hello World')

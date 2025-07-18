@@ -1,9 +1,12 @@
 # secure_module Python
-Security module which stores important and confidental information. Information is stored encrypted and password protected. The module also provides the WebEncr and WebDecr functions which encrypts and decrypts any object with AES-GCM 256-bit encryption. Have a look at SECURITY.md and read the information below for security informations.
+Security module which stores important and confidental information. Information is stored encrypted and password protected. The module also provides the WebEncr and WebDecr functions which encrypts and decrypts any object with AES-GCM 256-bit encryption. Have a look at SECURITY.md on GitHub and read the information below for security informations.
+
+# PyPI published
+This module is published on PyPI https://pypi.org/project/hc671123-secure-secrets/. You can install it with following pip command: pip install hc671123-secure-secrets .
 
 # How to use the module
-Have a look at the example.py file on GitHub. Try to always keep the latest version in your code. New Versions will be named with semantic versioning https://semver.org/.
-You need to have pycryptodomex installed. Example command for pip: pip install pycryptodomex.
+Have a look at the example.py file on GitHub. Try to always update to the latest version. New Versions will be named with semantic versioning https://semver.org/.
+You need to have pycryptodomex installed (if you install the module with pip, this is automatically done).<br>
 <b>Keep aware always adding secrets without making a commit with the secret in plaintext!</b>
 
 ## General information about AES-GCM
