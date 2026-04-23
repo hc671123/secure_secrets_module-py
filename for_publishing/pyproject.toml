@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hc671123_secure_secrets"
-version = '2.3.1'
+version = '2.4.1'
 description = "Module which enables storing encrypted, password protected secrets in a single file. Also allows for easy encryption and decryption of data"
 readme = "README.md"
 authors = [{ name = "hc671123", email = "behoben_floral0p@icloud.com" }]
@@ -17,6 +17,7 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.13",
+    "Natural Language :: English",
 ]
 keywords = ["secrets", "secure", "encryption"]
 dependencies = [

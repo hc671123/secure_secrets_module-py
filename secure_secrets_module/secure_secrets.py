@@ -17,7 +17,7 @@ class secrets:
         """
         #change this variable for faster hashing (lower the number) or more secure hashing (raise the number). A value below 1000000 is highly discouraged.
         self.iterations_pbkdf_hashing = 10_000_000
-        self.secrets_file_version = '1.0.0'
+        self.secrets_file_version = '1.0.0' #The version of the file format of the secrets file, not the version of the module. This is used to check if the secrets file is compatible with the module, if not an error is raised.
         
         import getpass
         from os import path
@@ -197,7 +197,6 @@ class secrets:
         
         with open(backendpath(self.directory,'data.secrets'),'wb') as f:
             f.write(secr)
-    
     
     def __check_permission(self, id: str) -> None:
         if id in self.secrets.keys():

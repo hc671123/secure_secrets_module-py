@@ -6,10 +6,13 @@ This module is published on PyPI https://pypi.org/project/hc671123-secure-secret
 
 # How to use the module
 Have a look at the example.py file on GitHub. Try to always update to the latest version. New Versions will be named with semantic versioning https://semver.org/.
-You need to have pycryptodomex installed (if you install the module with pip, this is automatically done).<br>
+You need to have pycryptodomex installed (if you install the module with pip, this will be automatically done).<br>
 <b>Keep aware always adding secrets without making a commit with the secret in plaintext!</b>
 
-## General information about AES-GCM
+## Functions in the secrets class, which shall be used by developers
+add_secret, get_secret, password_change, AES_Encr, AES_Decr, change_directory. You could use __check_permission, but normally you will not have to / have no reason to use it. All other functions are meant for internal use in the module only.
+
+# General information about AES-GCM
 AES-GCM provides data integrity and confidentiality (it belongs to the class of authenticated encryption with associated data - AEAD algorithms).
 For further information about GCM I recommend you to have a look at <i>http://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf</i>. You can also have a look at <i>https://en.wikipedia.org/wiki/Galois/Counter_Mode</i>.
 
@@ -19,11 +22,11 @@ For further information about GCM I recommend you to have a look at <i>http://cs
 - The authentication strength depends on the length of it's tag. The longer the tag (128 bit / 16 byte maximum) the better. 
 - For information about Key Establishment have a look at section 8.1 in <i>http://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf</i>.
 
-## Information about my implementation
+# Information about my implementation of AES-GCM
 
-### nonce
+## nonce
 I use a pseudo random nonce with 64 bytes length. If high security is needed or something like file encryption is wanted, I would recommend using a deterministic nonce, like described in section 8.2.1 in <i>http://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf</i>. As the pycryptodomex implementation supports 16 byte nonces, I would use a 16 byte nonce. If you change the length of the nonce, the decrypt function must be adapted to the new length.
-### authentication tag
+## authentication tag
 I use the longest possible tag length, which ensures the highest possible authentication strength. Smaller tag lengths are highly discouraged.
-### Key Generation
+## Key Generation
 Generates a random key. For information about Key Establishment have a look at section 8.1 in <i>http://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf</i>.
