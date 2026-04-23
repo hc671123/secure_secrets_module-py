@@ -43,44 +43,10 @@ class secrets:
         self.secure_module_key = AES_GCM.decrypt(secure_module_key_encrypted,password_key)        
         self.__load_secrets()
     
-    def __load_secrets(self) -> None:
-        with open(backendpath(self.directory,'data.secrets'),'rb') as f:
-            self.secrets = f.read()
-            
-        self.secrets = AES_GCM.decrypt(self.secrets,self.secure_module_key).decode('utf-8')
-        self.secrets: dict = json.loads(self.secrets)
-        
-        if not 'secrets_file_version' in self.secrets.keys():
-            self.__add_secret_module('secrets_file_version','1.0.0')
-            
-        if not self.secrets_file_version == self.secrets['secrets_file_version']['data']:
-            raise NotImplementedError(f'The version ({self.secrets['secrets_file_version']['data']}) of the given secrets file ({backendpath(self.directory,'data.secrets')}) is not compatible with this Version of the module!')
-        
-        self.aeskey = self.secrets['Key_AES']['data']
-        self.aeskey = base64.b64decode(self.aeskey)
-    
+    #functions for users of the module:
     def add_secret(self,id: str, data) -> None:
         self.__check_permission(id)
         self.__add_secret_background(id, data)
-    
-    def __add_secret_module(self, id: str, data) -> None:
-        self.__add_secret_background(id, data, private=True)
-    
-    def __add_secret_background(self, id: str, data, private = False) -> None:
-        
-        #handling of binary data
-        if type(data)==type(b'12'):
-            binary = True
-            data = base64.b64encode(data).decode('ascii')
-        else:
-            binary = False
-            
-        self.secrets.update({id: {'data': data,'binary': binary, 'private': private}})
-        secr = json.dumps(self.secrets).encode('utf-8')
-        secr = AES_GCM.encrypt(secr, self.secure_module_key)
-        
-        with open(backendpath(self.directory,'data.secrets'),'wb') as f:
-            f.write(secr)
     
     def get_secret(self, id: str):
         secret = self.secrets[id]
@@ -93,13 +59,10 @@ class secrets:
             data = base64.b64decode(data)
             
         return data
-    
-    def __check_permission(self, id: str) -> None:
-        if id in self.secrets.keys():
-            if self.secrets[id]['private']:
-                raise PermissionError('You do not have Permission to access module secrets!')
-    
+     
     def password_change(self) -> None:
+        """lets the user change the password of the current secrets file (all over command line input)
+        """
         import getpass
         #Checking if old password is valid
         password = getpass.getpass('enter your current password -->')
@@ -126,30 +89,6 @@ class secrets:
             f.write(secure_module_key_encrypted)
         print('Changed password!')
         
-    
-    def __init_secure_module(self, password: str) -> None:
-        #Init runs, if no existing data.secrets file was found
-        #calculates and Hashes the keys and salts needed
-        from os import urandom
-        salt = urandom(128)
-        
-        with open(backendpath(self.directory,'s.bin'),'wb') as f:
-            f.write(salt)
-        
-        from hashlib import pbkdf2_hmac
-        password_key = pbkdf2_hmac('sha-256',password.encode('utf-8'), salt, self.iterations_pbkdf_hashing)
-        
-        secure_module_key = AES_GCM.random_key()
-        self.secure_module_key = pbkdf2_hmac('sha-256',secure_module_key, urandom(256), 40_000_000)
-        secure_module_key_encrypted = AES_GCM.encrypt(self.secure_module_key,password_key)
-        with open(backendpath(self.directory,'k.bin'),'wb') as f:
-            f.write(secure_module_key_encrypted)
-            
-        #adds the module secrets
-        self.secrets = {}
-        self.__add_secret_module('Key_AES',AES_GCM.random_key())
-        self.__add_secret_module('secrets_file_version',self.secrets_file_version)
-    
     def AES_Encr(self,data) -> bytes:
         """Encrypts stuff, without having to worry about the key or data type
 
@@ -175,3 +114,92 @@ class secrets:
         decr: bytes = AES_GCM.decrypt(data,self.aeskey)
         data = json.loads(decr.decode('ascii'))
         return data
+    
+    def change_directory(self, new_directory: str) -> None:
+        """Changes the directory of the current secrets files. The new directory must not contain a secrets file, otherwise an error is raised. If the directory does not exist, it will be created.
+        Do not forget to change the path in the initialization of the module!
+
+        Args:
+            new_directory (str): Path to the new directory for the secrets file
+        """
+        from os import path, remove
+        if path.exists(backendpath(new_directory,'data.secrets')) or path.exists(backendpath(new_directory,'s.bin')) or path.exists(backendpath(new_directory,'k.bin')):
+            raise FileExistsError('The new directory already contains secrets files, choose another one or delete those first!')
+        if not path.exists(new_directory):
+            from os import makedirs
+            makedirs(new_directory)
+        from shutil import copy
+        copy(backendpath(self.directory,'data.secrets'),backendpath(new_directory,'data.secrets'))
+        copy(backendpath(self.directory,'s.bin'),backendpath(new_directory,'s.bin'))
+        copy(backendpath(self.directory,'k.bin'),backendpath(new_directory,'k.bin'))
+        remove(backendpath(self.directory,'data.secrets'))
+        remove(backendpath(self.directory,'s.bin'))
+        remove(backendpath(self.directory,'k.bin'))
+        self.directory = new_directory
+        print('Changed secrets files directory!')
+    
+    #internal functions:
+    
+    def __init_secure_module(self, password: str) -> None:
+        #Init runs, if no existing data.secrets file was found
+        #calculates and Hashes the keys and salts needed
+        from os import urandom
+        salt = urandom(128)
+        
+        with open(backendpath(self.directory,'s.bin'),'wb') as f:
+            f.write(salt)
+        
+        from hashlib import pbkdf2_hmac
+        password_key = pbkdf2_hmac('sha-256',password.encode('utf-8'), salt, self.iterations_pbkdf_hashing)
+        
+        secure_module_key = AES_GCM.random_key()
+        self.secure_module_key = pbkdf2_hmac('sha-256',secure_module_key, urandom(256), 40_000_000)
+        secure_module_key_encrypted = AES_GCM.encrypt(self.secure_module_key,password_key)
+        with open(backendpath(self.directory,'k.bin'),'wb') as f:
+            f.write(secure_module_key_encrypted)
+            
+        #adds the module secrets
+        self.secrets = {}
+        self.__add_secret_module('Key_AES',AES_GCM.random_key())
+        self.__add_secret_module('secrets_file_version',self.secrets_file_version)
+           
+    def __load_secrets(self) -> None:
+        with open(backendpath(self.directory,'data.secrets'),'rb') as f:
+            self.secrets = f.read()
+            
+        self.secrets = AES_GCM.decrypt(self.secrets,self.secure_module_key).decode('utf-8')
+        self.secrets: dict = json.loads(self.secrets)
+        
+        if not 'secrets_file_version' in self.secrets.keys():
+            self.__add_secret_module('secrets_file_version','1.0.0')
+            
+        if not self.secrets_file_version == self.secrets['secrets_file_version']['data']:
+            raise NotImplementedError(f'The version ({self.secrets['secrets_file_version']['data']}) of the given secrets file ({backendpath(self.directory,'data.secrets')}) is not compatible with this Version of the module!')
+        
+        self.aeskey = self.secrets['Key_AES']['data']
+        self.aeskey = base64.b64decode(self.aeskey)
+    
+    def __add_secret_module(self, id: str, data) -> None:
+        self.__add_secret_background(id, data, private=True)
+    
+    def __add_secret_background(self, id: str, data, private = False) -> None:
+        
+        #handling of binary data
+        if type(data)==type(b'12'):
+            binary = True
+            data = base64.b64encode(data).decode('ascii')
+        else:
+            binary = False
+            
+        self.secrets.update({id: {'data': data,'binary': binary, 'private': private}})
+        secr = json.dumps(self.secrets).encode('utf-8')
+        secr = AES_GCM.encrypt(secr, self.secure_module_key)
+        
+        with open(backendpath(self.directory,'data.secrets'),'wb') as f:
+            f.write(secr)
+    
+    
+    def __check_permission(self, id: str) -> None:
+        if id in self.secrets.keys():
+            if self.secrets[id]['private']:
+                raise PermissionError('You do not have Permission to access module secrets!')
